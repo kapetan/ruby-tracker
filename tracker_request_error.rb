@@ -1,0 +1,2 @@
+class TrackerRequestError < StandardError
+end
