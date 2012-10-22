@@ -1,6 +1,6 @@
 # Ruby-Tracker
 
-A small BitTorrent Tracker written in Ruby. The peers and held in memory. See the [BitTorrent specifications][bt] for more details on how the protocol is defined, and what communication is to be expect from the tracker.
+A small BitTorrent Tracker written in Ruby. The peers are held in memory. See the [BitTorrent specifications][bt] for more details on how the protocol is defined, and what communication is to be expect from the tracker.
 
 # Dependencies
 
@@ -13,8 +13,8 @@ Needs following gems to run
 
 To start the server run
 
-```Ruby
-$ ruby web_server.rb
+```bash
+ruby web_server.rb
 ```
 
 It has a minimal web interface, which can be accessed at `http://localhost:<port>/announce`. The `port` is printed in the console when the server is started.
