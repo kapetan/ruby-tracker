@@ -1,72 +1,56 @@
-#require 'rubygems'
-#require 'json'
-
-class String
-	def to_hex
-		self.unpack('C*').
-			map {|b| (b < 16 ? '0' : '') + b.to_s(16)}.join('')
-	end
-
-	def to_bin_from_hex
-		a = []
-		for i in (0...(self.bytesize / 2)) do
-			a << self[i*2, 2]
-		end
-
-		a.map! {|h| h.hex}
-		a.pack("C*")
-	end
-end
-
 module Tracker
 	class Peer
-		attr_reader :ip, :port, :id, :last_contact, :last_event, :hex_id
+		attr_reader :ip, :port, :id, :updated_at, :events
 		attr_accessor :left, :uploaded, :downloaded
 
 		TIMEOUT = 600
 
-		def initialize(ip, port, id)
+		def initialize(torrent, ip, port, id)
+			@torrent = torrent
 			@ip = ip
 			@port = port
 			@id = id
-			@hex_id = id.to_hex
-			# @hex_id = id.unpack('C*').
-			#  map {|b| (b < 16 ? '0' : '') + b.to_s(16)}.join('')
 
+			@events = []
 			@uploaded = 0
 			@downloaded = 0
-			@last_contact = Time.now
-			@completed = false
+			@left = 0
+			
+			@updated_at = Time.now
 		end
 
 		def ==(peer)
-			peer.ip == @ip and peer.port == @port and peer.hex_id == @hex_id
-		end
-
-		def last_event=(event)
-			@last_event = event
-			@completed = true if event == 'complete'
+			peer.is_a?(Peer) and peer.ip == @ip and peer.port == @port and peer.id == @id
 		end
 
 		def completed?
-			@completed
+			@left.zero?
 		end
 
 		def stale?
-			Time.now - @last_contact > TIMEOUT
+			Time.now - @updated_at > @torrent.tracker.interval
 		end
 
-		def refresh
-			@last_contact = Time.now
+		def update(params)
+			@uploaded = params[:uploaded]
+			@downloaded = params[:downloaded]
+			@left = params[:left]
+			@events.push(params[:event]) if params[:event]
+
+			@updated_at = Time.now
 		end
 
-		def to_json(*a)
+		def to_hash
 			{
-				:description => "#{hex_id}@#{ip}:#{port}",
-				:last_contact => last_contact,
-				:completed => completed?
-			}.to_json(*a)
+				:ip => ip,
+				:port => port,
+				:id => id.to_hex,
+				:updated_at => updated_at,
+				:completed => completed?,
+				:downloaded => downloaded,
+				:uploaded => uploaded,
+				:left => left
+			}
 		end
-
 	end
 end

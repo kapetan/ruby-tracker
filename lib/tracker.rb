@@ -1,10 +1,10 @@
 $LOAD_PATH << File.dirname(__FILE__)
 
-require 'tracker/peer'
 require 'tracker/base'
 require 'tracker/request'
-#require 'tracker/tracker_request_error.rb'
-#require 'tracker/request_validator.rb'
+require 'tracker/response'
+require 'tracker/peer_id'
+require 'tracker/peer'
 
 require 'tracker/bencode/error'
 require 'tracker/bencode/bencoder'
@@ -23,6 +23,7 @@ options = {
 	:show_exceptions => true
 }
 
+set :logging, false
 set :show_exceptions, options[:show_exceptions]
 set :dump_errors, options[:dump_errors]
 set :port, options[:port]
@@ -39,8 +40,6 @@ end
 usage(options)
 
 tracker = Tracker::Base.new
-#bencoder = BEncoder.new
-#valid = RequestValidator.new
 
 get '/' do
 	haml :index, :locals => {
@@ -51,45 +50,29 @@ get '/announce' do
 	content_type 'text/plain', :charset => 'utf-8'
 
 	begin
-		#p = valid.validate params, request.ip
-
-		#peer = tracker.peer p.info_hash, p.ip, p.port, p.peer_id
-		#tracker.update_peer peer, p.downloaded, p.uploaded, p.left, p.event
-		#peer_list = tracker.peer_list p.info_hash, p.numwant, peer
-
-		#stats = tracker.stats p.info_hash
-
 		parameters = { :ip => request.ip }.update(params)
 		request = Tracker::Request.new(parameters)
 
 		request.valid!
+		
+		torrent = tracker.torrent(request.info_hash)
+		peer = torrent.peer(request.ip, request.port, request.peer_id)
 
-		peer = tracker.peer(request.info_hash, request.ip, request.port, request.peer_id)
-		tracker.update_peer(peer, request.downloaded, request.uploaded, request.left, request.event)
-		peer_list = tracker.peer_list(request.info_hash, request.numwant, peer)
+		peer.update(request)
 
-		stats = tracker.stats(request.info_hash)
-
-		response = {
-			:interval => Tracker::Base::INTERVAL,
-			:complete => stats[:complete],
-			:incomplete => stats[:incomplete],
-			:peers => []
-		}
-
-		peer_list.each do |peer|
-			response[:peers].push({:peer_id => peer.id, :ip => peer.ip, :port => peer.port})
-		end
-
-		Tracker::Bencode.encode response
+		response = Tracker::AnnounceResponse.new(torrent)
+		response.bencode({ :ignore_peers => [peer] }.update(request))
 	rescue Tracker::Request::Error => err
-		#content_type 'text/plain', :charset => 'utf-8'
-		#Tracker::Bencode.encode 'failure reason' => err.message
-
+		status 400
 		err.bencode
 	end
 end
 
+get '/stats' do
+	haml :stats, :locals => tracker.to_hash  #stats.call
+end
+
+=begin
 stats = Proc.new do
 	s = {
 		:global_stats => tracker.global_stats,
@@ -133,3 +116,4 @@ get '/stats/global' do
 		#stats.call.to_json
 	end
 end
+=end

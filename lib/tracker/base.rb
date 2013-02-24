@@ -1,109 +1,98 @@
-#require 'peer.rb'
-
 module Tracker
-	class Base
-		attr_reader :started, :updated
+	class Torrent
+		attr_reader :info_hash, :peers, :created_at, :tracker
 
-		INTERVAL = 300
-
-		def initialize
-			@peers = BinHash.new
-			# @peers = {}
-			@started = Time.now
+		def initialize(tracker, info_hash)
+			@tracker = tracker
+			@info_hash = info_hash
+			@peers = []
+			@created_at = Time.now
 		end
 
-		def global_stats
-			active_peers = 0
-			active_files = @peers.length
-
-			@peers.each_pair do |info_hash, peers|
-				active_peers += peers.length
-			end
-
-			{
-				:active_peers => active_peers,
-				:active_files => active_files,
-				:info_hashes => @peers.keys.dup
-			}
+		def ==(torrent)
+			torrent.is_a?(Torrent) and torrent.info_hash == @info_hash
 		end
 
-		def stats(info_hash)
-			peers = @peers[info_hash]
-			if peers
-				completed = 0
-				downloaded = 0
-				uploaded = 0
-
-				peers.each do |peer|
-					completed += 1 if peer.completed?
-					downloaded += peer.downloaded
-					uploaded += peer.uploaded
-				end
-
-				{
-					:complete => completed,
-					:incomplete => peers.length - completed,
-					:downloaded => downloaded,
-					:uploaded => uploaded
-
-				}
-			else
-				nil
-			end
+		def eql?(torrent)
+			torrent.hash == hash
 		end
 
-		def peer(info_hash, ip, port, id)
-			@peers[info_hash] = [] if not @peers[info_hash]
+		def hash
+			@info_hash.hash
+		end
 
-			peer = @peers[info_hash].find {|p| p.id == id and p.ip == ip and
-				p.port == port}
+		def completed
+			@peers.reduce(0) { |acc, p| acc + (p.completed? ? 1 : 0) }
+		end
+
+		def uncompleted
+			@peers.reduce(0) { |acc, p| acc + (p.completed? ? 0 : 1) }
+		end
+
+		def purge!
+			@peers = @peers.reject { |peer| peer.stale? }
+		end
+
+		def peer(ip, port, id)
+			peer = @peers.find { |p| p.ip == ip and p.port == port and p.id == id }
+
 			if not peer
-				peer = Peer.new ip, port, id
-				@peers[info_hash].push peer
-				update
+				peer = Tracker::Peer.new(self, ip, port, id)
+				@peers.push(peer)
 			end
 
 			peer
 		end
 
-		def update_peer(peer, downloaded, uploaded, left, event)
-			peer.downloaded = downloaded
-			peer.uploaded = uploaded
-			peer.left = left
-			peer.last_event = event if event
-			peer.refresh
-			update
+		def peers(num = nil, ignore_peers = [])
+			num ||= @tracker.numwant
+			num = @peers.length if num == :all
+
+			@peers.select { |p| !ignore_peers.include?(p) }.sort { rand }[0...num]
 		end
 
-		def peer_list(info_hash, num = nil, ignore_peer = nil)
-			num = 50 if not num
-			peers = @peers[info_hash]
-			return [] if not peers or peers.empty?
+		def to_hash
+			{
+				:peers => peers.map { |peer| peer.to_hash },
+				:created_at => created_at,
+				:info_hash => info_hash.to_hex
+			}
+		end
+	end
 
-			peers = peers.dup
-			peers.delete ignore_peer if ignore_peer
+	class Base
+		attr_reader :interval, :numwant, :torrents
 
-			if num == :all or peers.length <= num
-				peers
-			else
-				peers = peers.sort {rand}
-				peers[0..(num - 1)]
+		DEFAULT_INTERVAL = 300
+		DEFAULT_NUMWANT = 30
+
+		def initialize(options = {})
+			@interval = options[:interval] || DEFAULT_INTERVAL
+			@numwant = options[:numwant] || DEFAULT_NUMWANT
+
+			@torrents = {}
+		end
+		
+		def torrent(info_hash)
+			torrent = @torrents[info_hash]
+
+			if not torrent
+				torrent = Torrent.new(self, info_hash)
+				@torrents[info_hash] = torrent
 			end
+
+			torrent
 		end
 
-		private
-		def update
-			@updated = Time.now.to_i
+		def purge!
+			@torrents.each_value { |torrent| torrent.purge! }
 		end
 
-		class BinHash < Hash
-			def [](key)
-				super(key.to_hex)
-			end
-
-			def []=(key, value)
-				super(key.to_hex, value)
-			end
+		def to_hash
+			{
+				:interval => interval,
+				:torrents => Hash[torrents.map { |n,v| [n.to_hex, v.to_hash] }]
+			}
 		end
 
 	end

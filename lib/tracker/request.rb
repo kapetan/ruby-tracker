@@ -1,4 +1,13 @@
 module Tracker
+	class BinaryString < String
+		def self.from_hex(str)
+			(str.length / 2).floor.times.map { |i| str[i * 2, 2].hex }.pack('C*')
+		end
+
+		def to_hex
+			unpack('C*').map {|b| (b < 16 ? '0' : '') + b.to_s(16)}.join('')
+		end
+	end
 
 	class Request
 		class Error < StandardError
@@ -23,6 +32,10 @@ module Tracker
 			PARAMETERS.each { |name| instance_variable_set :"@#{name}", (parameters[name.to_sym] || parameters[name.to_s]) }
 		end
 
+		def [](name)
+			respond_to?(name) ? send(name) : nil
+		end
+
 		def errors
 			return @errors if @errors
 
@@ -40,6 +53,14 @@ module Tracker
 			error(:compact) if @compact and not @compact.match(/0|1/)
 
 			@errors
+		end
+
+		def info_hash
+			BinaryString.new(@info_hash)
+		end
+
+		def peer_id
+			BinaryString.new(@peer_id)
 		end
 
 		def valid?
@@ -68,11 +89,11 @@ module Tracker
 		end
 
 		def numwant
-			@numwant || 0
+			@numwant && @numwant.to_i
 		end
 
 		def compact
-			@compact.to_i
+			(@compact || 0).to_i
 		end
 
 		def compact?
@@ -81,6 +102,10 @@ module Tracker
 
 		def no_peer_id?
 			!!@no_peer_id
+		end
+
+		def to_hash
+			Hash[PARAMETERS.map { |name| [name, send(name)] }]
 		end
 
 		private

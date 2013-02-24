@@ -1,23 +1,23 @@
 !!! 5
 %html
-  %head
-    %title Ruby Tracker
-    %link{:rel => 'stylesheet', :type => 'text/css', 
-      :href => 'css/tracker.css'}
-  %body
-    #content
-      %h1#main-header A BitTorrent Tracker written in Ruby
-      %p
-        This is not a ordinary webpage. The server running this page is used by BitTorrent clients to get a list of peers, which they use to build a swarn, needed to share a file. For more information 
-        %a{:href => 'http://wiki.theory.org/BitTorrentSpecification'} BitTorrent specification. 
-        Use the url below with the right request parameters and a bencoded dictionary containing the peer list will be returned.
+	%head
+		%title Ruby Tracker
+		%link{:rel => 'stylesheet', :type => 'text/css', 
+			:href => 'css/tracker.css'}
+	%body
+		#content
+			%h1#main-header A BitTorrent Tracker written in Ruby
+			%p
+				This is not a ordinary webpage. The server running this page is used by BitTorrent clients to get a list of peers, which they use to build a swarn, needed to share a file. For more information 
+				%a{:href => 'http://wiki.theory.org/BitTorrentSpecification'} BitTorrent specification. 
+				Use the url below with the right request parameters and a bencoded dictionary containing the peer list will be returned.
 
-      .centered
-        %a{:href => '/announce'}
-          %tt
-            = announce_url
+			.centered
+				%a{:href => '/announce'}
+					%tt
+						= announce_url
 
-      %p
-        The
-        %a{:href => '/stats'} stats page
-        contains some statistics about the tracker (active peers and files). 
+			%p
+				The
+				%a{:href => '/stats'} stats page
+				contains some statistics about the tracker (active peers and files). 
