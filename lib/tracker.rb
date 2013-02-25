@@ -1,9 +1,9 @@
 $LOAD_PATH << File.dirname(__FILE__)
 
+require 'tracker/torrent'
 require 'tracker/base'
 require 'tracker/request'
 require 'tracker/response'
-require 'tracker/peer_id'
 require 'tracker/peer'
 
 require 'tracker/bencode/error'
