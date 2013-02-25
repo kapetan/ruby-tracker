@@ -1,4 +1,5 @@
 module Tracker
+
 	class Peer
 		attr_reader :ip, :port, :id, :updated_at, :events
 		attr_accessor :left, :uploaded, :downloaded
@@ -53,4 +54,5 @@ module Tracker
 			}
 		end
 	end
+	
 end
