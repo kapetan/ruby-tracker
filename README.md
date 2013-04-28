@@ -1,25 +1,22 @@
 # Ruby-Tracker
 
-A small BitTorrent Tracker written in Ruby. The peers are held in memory. See the [BitTorrent specifications][bt] for more details on how the protocol is defined, and what communication is to be expect from the tracker.
+A small BitTorrent Tracker written in Ruby. The peers are held in memory. See the [BitTorrent specifications][bt] for more details on how the protocol is defined, and what communication is to be expected from the tracker.
 
 # Dependencies
 
-Needs following gems to run
-
-* sinatra
-* haml
+The tracker requires `sinatra` to run.
 
 # Usage
 
 To start the server run
 
 ```bash
-ruby web_server.rb
+ruby lib/tracker.rb
 ```
 
-It has a minimal web interface, which can be accessed at `http://localhost:<port>/announce`. The `port` is printed in the console when the server is started.
+It has a minimal web interface, which can be accessed at `http://localhost:<port>/` using a browser. The `port` is printed in the console when the server is started.
 
-When creating a .torrent file (for instance with a BitTorrent client) the URL can be included in the *Trackers* field.
+When creating a .torrent file (for instance with a BitTorrent client) the URL (`http://localhost:<port>/announce`) can be included in the *Trackers* field.
 
 # License 
 

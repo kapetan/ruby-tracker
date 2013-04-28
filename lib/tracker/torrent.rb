@@ -35,7 +35,7 @@ module Tracker
 		end
 
 		def peer(ip, port, id)
-			peer = @peers.find { |p| p.ip == ip and p.port == port and p.id == id }
+			peer = find_peer(ip, port, id)
 
 			if not peer
 				peer = Tracker::Peer.new(self, ip, port, id)
@@ -45,6 +45,10 @@ module Tracker
 			peer
 		end
 
+		def find_peer(ip, port, id)
+			@peers.find { |p| p.ip == ip and p.port == port and p.id == id }
+		end
+
 		def peers(num = nil, ignore_peers = [])
 			num ||= @tracker.numwant
 			num = @peers.length if num == :all
@@ -52,10 +56,23 @@ module Tracker
 			@peers.select { |p| !ignore_peers.include?(p) }.sort { rand }[0...num]
 		end
 
+		def destroy_peer(ip, port, id)
+			peer = find_peer(ip, port, id)
+			@peers.delete(peer) if peer
+
+			if @peers.empty?
+				tracker.torrents.delete(@info_hash)
+			end
+
+			peer
+		end
+
 		def to_hash
 			{
 				:peers => peers.map { |peer| peer.to_hash },
 				:created_at => created_at,
+				:completed => completed,
+				:uncompleted => uncompleted,
 				:info_hash => info_hash.to_hex
 			}
 		end

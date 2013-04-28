@@ -1,76 +1,67 @@
-body {
-    font-family:helvetica,sans-serif;
-    color:#111111;
-    font-size:100%;
-    line-height:1.25;
+.announce-url input {
+	margin: 0;
+	padding: 0;
+	width: 250px;
+	border: none;
+	outline: none;
+	background-color: transparent;
+	box-shadow: none;
+	cursor: default;
 }
-
-#main-header {
-    border-bottom:2px solid grey;
+.announce-url input:focus {
+	border: none;
+	background-color: transparent;
+	box-shadow: none;
 }
-
-#loading {
-    margin:10px;
-    position:fixed;
-    top:0;
-    left:0;
-    border:1px solid grey;
-    background-color:lightgrey;
-    padding:5px 20px;
-    display:none;
+.expandable-list {
+	width:  100%;
+	list-style: none;
+	margin: 0;
+	padding: 0;
 }
-
-#content {
-    margin:7px auto;
-    max-width:52em;
+.expandable-list li {
+	margin-bottom: 5px;
 }
-
-a:visited, a:link, a:active {
-    text-decoration:none;
-    color:blue;
+.expandable-list li .heading {
+	padding: 8px 15px;
+	border-radius: 5px;
+	border: 1px solid #e5e5e5;
+	background-color: #fafafa;
+	font-family: "Courier New", Courier, monospace;
 }
-
-a:hover {
-    text-decoration:underline;
-    color:darkred;
+.expandable-list li .heading .icon-chevron-up {
+	display: none;
 }
-
-.centered {
-    text-align:center;
+.expandable-list li.visible-body .heading .icon-chevron-up {
+	display: inline-block;
 }
-
-.main-panel {
-    -moz-border-radius:5px;
-    border-radius:5px;
-    border:2px solid lightblue;
-    text-align:center;
-    padding:5px;
+.expandable-list li.visible-body .heading .icon-chevron-down {
+	display: none;
 }
-
-.info-hash {
-    -moz-border-radius:5px;
-    border-radius:5px;
-    border:2px solid grey;
-    background-color:lightgrey;
-    text-align:center;
-    padding:5px;
-    margin-top:5px;
-    margin-bottom:5px;
+.expandable-list li .heading .info-hash {
+	margin-left: 10px;
 }
-
-.peer-item {
-    border-bottom:1px solid lightgrey;
+.expandable-list li .heading .ratio {
+	margin-left: 20px;
 }
-
-table.variables-explained {
-    margin-bottom:10px;
+.expandable-list li .heading .ratio .completed {
+	color: #52FF5D;
 }
-
-table.variables-explained td {
-    padding:2px;
+.expandable-list li .heading .ratio .uncompleted {
+	color: red;
 }
-
-table.variables-explained td:first-child {
-    /*background-color:lightblue;*/
-    padding-right:20px;
+.expandable-list li .heading .created-at {
+	float: right;
+}
+.expandable-list li .body {
+	display: none;
+	padding: 0 10px 0 20px;
+}
+.expandable-list li .body table {
+	border: 1px solid #e5e5e5;
+	border-top: none;
+	border-radius: 5px;
+}
+.expandable-list li .body table .ip-port {
+	font-family: monospace;
 }

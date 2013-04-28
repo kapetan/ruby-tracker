@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Ruby Tracker</title>
+
+		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script type="text/javascript" src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+
+		<script type="text/javascript" src="/javascripts/tracker.js"></script>
+
+		<link type="text/css" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+		<link rel="stylesheet" type="text/css" href="/css/tracker.css">
+
+		<!-- Test torrents and peers -->
+		<link rel="stylesheet" type="text/css" href="/announce?info_hash=01234567890123456789&peer_id=98765432109876543210&port=5881&downloaded=0&uploaded=0&left=0">
+		<link rel="stylesheet" type="text/css" href="/announce?info_hash=01234567890123456789&peer_id=abcdefghijklmnopqrst&port=5881&downloaded=0&uploaded=0&left=0">
+		<link rel="stylesheet" type="text/css" href="/announce?info_hash=01234567890123456789&peer_id=a8765432109876543210&port=5881&downloaded=0&uploaded=0&left=0">
+		<link rel="stylesheet" type="text/css" href="/announce?info_hash=a1234567890123456789&peer_id=a8765432109876543210&port=5881&downloaded=0&uploaded=0&left=0">
+	</head>
+	<body>
+		<div class="container">
+			<h2>A BitTorrent tracker written in Ruby</h2>
+
+			<p>
+				Add the following url to a <b>.torrent</b> file.
+			</p>
+
+			<div class="text-center well well-small announce-url">
+				<input readonly="readonly" type="text" value="<%= announce_url %>">
+			</div>
+
+			<p>
+				List of currently connected peers and their stats. Click an entry to get more detailed view for each torrent.
+			</p>
+
+			<ul class="expandable-list">
+				<% tracker[:torrents].each do |torrent| %>
+					<li class="torrent-entry" data-info-hash="<%= torrent[:info_hash] %>">
+						<div class="heading">
+							<i class="icon-chevron-down"></i>
+							<i class="icon-chevron-up"></i>
+							<span class="info-hash" title="Info hash"><%= torrent[:info_hash][0,7] %></span>
+							<span class="ratio">
+								<span class="completed" title="Seeders"><%= torrent[:completed] %></span> /
+								<span class="uncompleted" title="Leechers"><%= torrent[:uncompleted] %></span>
+							</span>
+							<span class="created-at" title="Created at"><%= torrent[:created_at].strftime('%F %T') %></span>
+						</div>
+						<div class="body">
+							<table class="table table-condensed">
+								<thead>
+									<tr>
+										<th></th>
+										<th>Downloaded</th>
+										<th>Uploaded</th>
+										<th>Left</th>
+										<th>Last updated</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									<% torrent[:peers].each do |peer| %>
+										<tr class="peer-entry" data-ip="<%= peer[:ip] %>" data-port="<%= peer[:port] %>" data-id="<%= peer[:id] %>">
+											<td class="ip-port"><%= peer[:ip] %>:<%= peer[:port] %></td>
+											<td><%= size(peer[:downloaded]) %></td>
+											<td><%= size(peer[:uploaded]) %></td>
+											<td><%= size(peer[:left]) %></td>
+											<td><%= peer[:updated_at].strftime('%F %T') %></td>
+											<td>
+												<button class="close destroy-peer">&times;</button>
+											</td>
+										</tr>
+									<% end %>
+								</tbody>
+							</table>
+						</div>
+					</li>
+				<% end %>
+			</ul>
+		</div>
+	</body>
+</html>

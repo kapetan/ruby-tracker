@@ -25,13 +25,16 @@ module Tracker
 		end
 
 		def purge!
-			@torrents.each_value { |torrent| torrent.purge! }
+			@torrents = @torrents.reject { |torrent| 
+				torrent.purge! 
+				torrent.peers.empty?
+			}
 		end
 
 		def to_hash
 			{
 				:interval => interval,
-				:torrents => torrents.map { |_, torrent| torrent }
+				:torrents => torrents.map { |_, torrent| torrent.to_hash }
 			}
 		end
 

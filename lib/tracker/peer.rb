@@ -41,6 +41,10 @@ module Tracker
 			@updated_at = Time.now
 		end
 
+		def destroy
+			torrent.destroy_peer(@ip, @port, @id)
+		end
+
 		def to_hash
 			{
 				:ip => ip,

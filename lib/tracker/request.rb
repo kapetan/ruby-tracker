@@ -1,7 +1,8 @@
 module Tracker
 	class BinaryString < String
 		def self.from_hex(str)
-			(str.length / 2).floor.times.map { |i| str[i * 2, 2].hex }.pack('C*')
+			str = (str.length / 2).floor.times.map { |i| str[i * 2, 2].hex }.pack('C*')
+			BinaryString.new(str)
 		end
 
 		def to_hex

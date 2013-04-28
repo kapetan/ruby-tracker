@@ -30,8 +30,7 @@ set :port, options[:port]
 set :root, File.join(File.dirname(__FILE__), '..', 'assets')
 
 def usage(options)
-	options[:ip] = UDPSocket.open { |s|
-		s.connect('64.233.187.99', 1); s.addr.last }
+	options[:ip] = UDPSocket.open { |s| s.connect('64.233.187.99', 1); s.addr.last }
 	puts "== A Ruby Tracker with backup from Sinatra"
 	puts "url: http://#{options[:ip]}:#{options[:port]}/announce"
 	puts ""
@@ -39,11 +38,41 @@ end
 
 usage(options)
 
+helpers do
+	def size(size)
+		units = ['B', 'KB', 'MB', 'GB', 'TB']
+		i = 0
+
+		while size >= 1024 and i < units.length do
+			size /= 1024
+			i += 1
+		end
+
+		"#{size.round(2)} #{units[i]}"
+	end
+end
+
 tracker = Tracker::Base.new
 
 get '/' do
-	haml :index, :locals => {
-		:announce_url => "http://#{options[:ip]}:#{options[:port]}/announce"}
+	erb :index, :locals => { 
+		:announce_url => "http://#{options[:ip]}:#{options[:port]}/announce",
+		:tracker => tracker.to_hash
+	}
+end
+
+post '/' do
+	torrent = JSON.parse(request.body.read)
+	torrent['info_hash'] = Tracker::BinaryString.from_hex(torrent['info_hash'])
+
+	peer = torrent['peer']
+	peer['id'] = Tracker::BinaryString.from_hex(peer['id'])
+	peer['port'] = peer['port'].to_i
+
+	torrent = tracker.torrents[torrent['info_hash']]
+	peer = torrent.destroy_peer(peer['ip'], peer['port'], peer['id'])
+
+	peer ? peer.to_hash.to_json : 'null'
 end
 
 get '/announce' do
@@ -67,53 +96,3 @@ get '/announce' do
 		err.bencode
 	end
 end
-
-get '/stats' do
-	haml :stats, :locals => tracker.to_hash  #stats.call
-end
-
-=begin
-stats = Proc.new do
-	s = {
-		:global_stats => tracker.global_stats,
-		:started => tracker.started,
-		:uptime => ((Time.now - tracker.started) / 60).round,
-		:updated => tracker.updated
-	}
-
-	#global = tracker.global_stats
-	#global[:info_hashes].map! {|h| h.to_hex}
-	#s[:global_stats] = global
-	s
-end
-
-get '/stats' do
-	haml :stats, :locals => stats.call
-end
-
-get '/stats/peer_list' do
-	content_type :json
-	info_hash = params[:info_hash]
-
-	if info_hash
-		plist = tracker.peer_list info_hash.to_bin_from_hex
-		plist ? plist.to_json : [].to_json
-	else
-		[].to_json
-	end
-end
-
-get '/stats/global' do
-	content_type :json
-	updated = params[:updated]
-	resp = stats.call
-
-	if /[\d]+/ === updated and updated.to_i == tracker.updated
-		resp[:global_stats].delete :info_hashes
-		resp.to_json
-	else
-		resp.to_json
-		#stats.call.to_json
-	end
-end
-=end
