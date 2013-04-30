@@ -12,7 +12,6 @@ require 'tracker/bencode/bdecoder'
 
 require 'rubygems'
 require 'sinatra'
-require 'haml'
 require 'json'
 require 'logger'
 require 'socket'
